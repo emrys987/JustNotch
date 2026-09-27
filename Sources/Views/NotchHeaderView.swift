@@ -57,24 +57,6 @@ public struct NotchHeaderView: View {
 
                 Spacer()
 
-                if mediaService.currentState.isPlaying && mediaService.currentState.hasActiveTrack {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Color(red: 0.18, green: 0.84, blue: 0.45))
-                            .frame(width: 5, height: 5)
-                        Text(mediaService.currentState.title)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .lineLimit(1)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(Color.white.opacity(0.06)))
-                    .frame(maxWidth: 160)
-                }
-
-                Spacer()
-
                 Button {
                     SettingsWindowController.shared.showWindow()
                 } label: {
