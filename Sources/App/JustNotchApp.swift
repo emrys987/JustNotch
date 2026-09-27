@@ -14,6 +14,10 @@ struct JustNotchApp: App {
             }
             .keyboardShortcut("N", modifiers: [.command, .shift])
 
+            Button(coordinator.keepNotchOpen ? "◉  Çentiği Sürekli Açık Bırak" : "○  Çentiği Sürekli Açık Bırak") {
+                coordinator.keepNotchOpen.toggle()
+            }
+
             Divider()
 
             Button("Ana Kısım") {

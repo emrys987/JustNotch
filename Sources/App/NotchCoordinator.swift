@@ -13,6 +13,29 @@ public final class NotchCoordinator: ObservableObject {
     @Published public var isShowingLyrics: Bool = false
     @Published public var temporaryHUDMessage: String? = nil
 
+    @Published public var keepNotchOpen: Bool = false {
+        didSet {
+            if keepNotchOpen {
+                closeTask?.cancel()
+                closeTask = nil
+                open()
+            }
+        }
+    }
+
+    @Published public var isDraggingFileOut: Bool = false {
+        didSet {
+            if isDraggingFileOut {
+                closeTask?.cancel()
+                closeTask = nil
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                    self?.isDraggingFileOut = false
+                }
+            }
+        }
+    }
+
     private var closeTask: Task<Void, Never>?
     private var hudDismissTask: Task<Void, Never>?
     private let notchAnimation = Animation.timingCurve(0.16, 1.0, 0.30, 1.0, duration: 0.28)
@@ -48,6 +71,10 @@ public final class NotchCoordinator: ObservableObject {
     public func onMouseExit() {
         isHovering = false
 
+        if keepNotchOpen || isDraggingFileOut {
+            return
+        }
+
         guard UserSettings.shared.openOnHover else { return }
 
         closeTask?.cancel()
@@ -55,14 +82,16 @@ public final class NotchCoordinator: ObservableObject {
             try? await Task.sleep(nanoseconds: 350_000_000)
             guard !Task.isCancelled else { return }
 
+            guard let self = self, !self.keepNotchOpen, !self.isDraggingFileOut else { return }
+
             if let panel = NotchWindowController.shared.window {
                 let mouseLocation = NSEvent.mouseLocation
                 let safeRect = panel.frame.insetBy(dx: -4, dy: -4)
                 if !NSMouseInRect(mouseLocation, safeRect, false) {
-                    self?.close()
+                    self.close()
                 }
             } else {
-                self?.close()
+                self.close()
             }
         }
     }
@@ -89,6 +118,7 @@ public final class NotchCoordinator: ObservableObject {
     public func close() {
         closeTask?.cancel()
         closeTask = nil
+        keepNotchOpen = false
         isShowingLyrics = false
         withAnimation(notchAnimation) {
             isExpanded = false

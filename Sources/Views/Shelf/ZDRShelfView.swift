@@ -147,6 +147,25 @@ private struct ShelfItemCard: View {
         }
         .padding(6)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.08)))
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .onDrag {
+            NotchCoordinator.shared.isDraggingFileOut = true
+            let provider = NSItemProvider(object: item.fileURL as NSURL)
+            provider.suggestedName = item.fileName
+            return provider
+        } preview: {
+            VStack(spacing: 4) {
+                Image(nsImage: item.systemIcon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+                Text(item.fileName)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+            .padding(6)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.85)))
+        }
         .onTapGesture {
             ZDRShelfService.shared.openFile(item)
         }

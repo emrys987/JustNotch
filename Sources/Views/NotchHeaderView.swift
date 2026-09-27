@@ -85,7 +85,20 @@ public struct NotchHeaderView: View {
                         .foregroundStyle(.white.opacity(0.7))
                 }
                 .buttonStyle(.plain)
-                .help(loc.btnSettings)
+                Button {
+                    coordinator.keepNotchOpen.toggle()
+                } label: {
+                    Image(systemName: coordinator.keepNotchOpen ? "pin.fill" : "pin")
+                        .font(.system(size: 10))
+                        .padding(6)
+                        .background(
+                            Circle()
+                                .fill(coordinator.keepNotchOpen ? Color(red: 1.0, green: 0.65, blue: 0.15).opacity(0.3) : Color.white.opacity(0.1))
+                        )
+                        .foregroundStyle(coordinator.keepNotchOpen ? Color(red: 1.0, green: 0.65, blue: 0.15) : Color.white.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .help(coordinator.keepNotchOpen ? (loc.isTurkish ? "Sabitlemeyi Kaldır" : "Unpin") : (loc.isTurkish ? "Çentiği Açık Tut" : "Keep Open"))
 
                 Button {
                     coordinator.close()
