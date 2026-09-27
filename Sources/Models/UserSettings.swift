@@ -47,6 +47,10 @@ public final class UserSettings: ObservableObject {
         didSet { UserDefaults.standard.set(enableClipboardTab, forKey: "enableClipboardTab") }
     }
 
+    @Published public var enableMusicSearch: Bool {
+        didSet { UserDefaults.standard.set(enableMusicSearch, forKey: "enableMusicSearch") }
+    }
+
     @Published public var notchBackgroundStyle: NotchBackgroundStyle {
         didSet { UserDefaults.standard.set(notchBackgroundStyle.rawValue, forKey: "notchBackgroundStyle") }
     }
@@ -148,6 +152,8 @@ public final class UserSettings: ObservableObject {
             ? defaults.bool(forKey: "enablePomodoroWidget") : true
         self.enableClipboardTab = defaults.object(forKey: "enableClipboardTab") != nil
             ? defaults.bool(forKey: "enableClipboardTab") : true
+        self.enableMusicSearch = defaults.object(forKey: "enableMusicSearch") != nil
+            ? defaults.bool(forKey: "enableMusicSearch") : false
 
         if let rawStyle = defaults.string(forKey: "notchBackgroundStyle"),
            let style = NotchBackgroundStyle(rawValue: rawStyle) {

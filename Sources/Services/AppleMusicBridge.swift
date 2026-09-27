@@ -155,6 +155,15 @@ public final class AppleMusicBridge: Sendable {
         """)
     }
 
+    public func openTrackUrl(_ urlString: String) async {
+        await executeVoidScript("""
+        tell application "Music"
+            activate
+            open location "\(urlString)"
+        end tell
+        """)
+    }
+
     public func seek(to seconds: TimeInterval) async {
         await executeVoidScript("""
         tell application "Music"

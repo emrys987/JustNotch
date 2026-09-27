@@ -6,6 +6,7 @@ public struct MusicNotchView: View {
     @ObservedObject var settings = UserSettings.shared
     @ObservedObject var coordinator = NotchCoordinator.shared
     @ObservedObject var loc = LocalizationService.shared
+    @State private var isShowingSearch = false
 
     public init() {}
 
@@ -13,7 +14,12 @@ public struct MusicNotchView: View {
         let state = mediaService.currentState
 
         Group {
-            if !state.hasActiveTrack {
+            if isShowingSearch {
+                MusicSearchView(isPresented: $isShowingSearch)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .transition(.opacity)
+            } else if !state.hasActiveTrack {
                 VStack(spacing: 8) {
                     Image(systemName: "music.note.list")
                         .font(.system(size: 26))
@@ -52,18 +58,80 @@ public struct MusicNotchView: View {
                     )
 
                     VStack(alignment: .leading, spacing: 7) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(state.title)
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
+                        HStack(alignment: .center, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(state.title)
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
 
-                            Text(state.artist.isEmpty ? state.album : (state.album.isEmpty ? state.artist : "\(state.artist) — \(state.album)"))
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.65))
-                                .lineLimit(1)
+                                Text(state.artist.isEmpty ? state.album : (state.album.isEmpty ? state.artist : "\(state.artist) — \(state.album)"))
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.65))
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            HStack(spacing: 11) {
+                                if settings.enableMusicSearch {
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            isShowingSearch = true
+                                        }
+                                    } label: {
+                                        Image(systemName: "magnifyingglass")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundStyle(Color(red: 0.18, green: 0.84, blue: 0.45))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+
+                                Button {
+                                    mediaService.toggleShuffle()
+                                } label: {
+                                    Image(systemName: "shuffle")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(state.isShuffling ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    mediaService.previousTrack()
+                                } label: {
+                                    Image(systemName: "backward.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    mediaService.togglePlayPause()
+                                } label: {
+                                    Image(systemName: state.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                        .font(.system(size: 26))
+                                        .foregroundStyle(.white)
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    mediaService.nextTrack()
+                                } label: {
+                                    Image(systemName: "forward.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                }
+                                .buttonStyle(.plain)
+
+                                Button {
+                                    mediaService.toggleRepeat()
+                                } label: {
+                                    Image(systemName: "repeat")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(state.isRepeating ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
 
                         VStack(spacing: 3) {
                             GeometryReader { geo in
@@ -99,81 +167,35 @@ public struct MusicNotchView: View {
                             .foregroundStyle(.white.opacity(0.45))
                         }
 
-                        HStack(spacing: 0) {
-                            HStack(spacing: 14) {
-                                Button {
-                                    mediaService.toggleShuffle()
-                                } label: {
-                                    Image(systemName: "shuffle")
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                coordinator.isShowingLyrics = true
+                            }
+                        } label: {
+                            Group {
+                                if let currentLine = lyricsEngine.currentLine, !currentLine.text.isEmpty {
+                                    Text(currentLine.text)
                                         .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(state.isShuffling ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    mediaService.previousTrack()
-                                } label: {
-                                    Image(systemName: "backward.fill")
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(.white.opacity(0.85))
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    mediaService.togglePlayPause()
-                                } label: {
-                                    Image(systemName: state.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.system(size: 28))
                                         .foregroundStyle(.white)
+                                        .lineLimit(1)
+                                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                                } else if lyricsEngine.isLoading {
+                                    Text(loc.musicSyncingLyrics)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.white.opacity(0.5))
+                                } else if lyricsEngine.noLyricsAvailable {
+                                    Text(loc.musicNoLyrics)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.white.opacity(0.35))
+                                } else {
+                                    Text(state.title)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.white.opacity(0.4))
                                 }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    mediaService.nextTrack()
-                                } label: {
-                                    Image(systemName: "forward.fill")
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(.white.opacity(0.85))
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    mediaService.toggleRepeat()
-                                } label: {
-                                    Image(systemName: "repeat")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(state.isRepeating ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
-                                }
-                                .buttonStyle(.plain)
                             }
-
-                            Spacer()
-
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    coordinator.isShowingLyrics = true
-                                }
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "quote.bubble.fill")
-                                        .font(.system(size: 9))
-                                    if let currentLine = lyricsEngine.currentLine, !currentLine.text.isEmpty {
-                                        Text(currentLine.text)
-                                            .font(.system(size: 10, weight: .medium))
-                                            .lineLimit(1)
-                                    } else {
-                                        Text(loc.isTurkish ? "Sözler" : "Lyrics")
-                                            .font(.system(size: 10, weight: .medium))
-                                    }
-                                }
-                                .foregroundStyle(.white.opacity(0.75))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Capsule().fill(Color.white.opacity(0.08)))
-                                .frame(maxWidth: 130, alignment: .trailing)
-                            }
-                            .buttonStyle(.plain)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .buttonStyle(.plain)
                     }
                     .frame(maxWidth: .infinity)
                 }

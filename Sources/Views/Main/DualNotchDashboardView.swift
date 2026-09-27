@@ -7,6 +7,7 @@ public struct DualNotchDashboardView: View {
     @ObservedObject var settings = UserSettings.shared
     @ObservedObject var coordinator = NotchCoordinator.shared
     @ObservedObject var loc = LocalizationService.shared
+    @State private var isShowingSearch = false
 
     public init() {}
 
@@ -14,7 +15,14 @@ public struct DualNotchDashboardView: View {
         let mediaState = mediaService.currentState
         let pomodoroState = pomodoroService.state
 
-        HStack(alignment: .top, spacing: 14) {
+        Group {
+            if isShowingSearch {
+                MusicSearchView(isPresented: $isShowingSearch)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .transition(.opacity)
+            } else {
+                HStack(alignment: .top, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
                 ZStack {
                     if let artwork = mediaState.artworkImage {
@@ -54,7 +62,20 @@ public struct DualNotchDashboardView: View {
             }
 
             VStack(spacing: 6) {
-                HStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    if settings.enableMusicSearch {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isShowingSearch = true
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Color(red: 0.18, green: 0.84, blue: 0.45))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     Button {
                         mediaService.toggleShuffle()
                     } label: {
@@ -221,8 +242,10 @@ public struct DualNotchDashboardView: View {
                 }
             }
             .frame(width: 80, height: 80)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
     }
+}
 }

@@ -125,6 +125,16 @@ public final class SpotifyBridge: Sendable {
         """)
     }
 
+    public func searchAndPlay(query: String) async {
+        let cleanQuery = query.replacingOccurrences(of: "\"", with: "")
+        await executeVoidScript("""
+        tell application "Spotify"
+            activate
+            open location "spotify:search:\(cleanQuery)"
+        end tell
+        """)
+    }
+
     public func seek(to seconds: TimeInterval) async {
         await executeVoidScript("""
         tell application "Spotify"
