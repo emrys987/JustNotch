@@ -63,4 +63,21 @@ EOF
 
 codesign --force --deep --sign - "$BUNDLE_DIR" 2>/dev/null || true
 
-echo "JustNotch.app created at: $BUNDLE_DIR"
+# 1. Create ZIP package
+rm -f "$DIR/${APP_NAME}.zip"
+ditto -c -k --sequesterRsrc --keepParent "$BUNDLE_DIR" "$DIR/${APP_NAME}.zip"
+
+# 2. Create DMG package with Applications symlink
+rm -f "$DIR/${APP_NAME}.dmg"
+DMG_TEMP="/tmp/${APP_NAME}_DMG_STAGING"
+rm -rf "$DMG_TEMP"
+mkdir -p "$DMG_TEMP"
+cp -R "$BUNDLE_DIR" "$DMG_TEMP/"
+ln -s /Applications "$DMG_TEMP/Applications"
+hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_TEMP" -ov -format UDZO "$DIR/${APP_NAME}.dmg" > /dev/null 2>&1
+rm -rf "$DMG_TEMP"
+
+echo "Build complete!"
+echo "App: $BUNDLE_DIR"
+echo "DMG: $DIR/${APP_NAME}.dmg"
+echo "ZIP: $DIR/${APP_NAME}.zip"

@@ -53,13 +53,66 @@ struct JustNotchApp: App {
     }
 }
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
+        checkIfShouldMoveToApplicationsFolder()
+
         Task { @MainActor in
             NotchWindowController.shared.setupAndShowWindow()
             MediaService.shared.startMonitoring()
+        }
+    }
+
+    private func checkIfShouldMoveToApplicationsFolder() {
+        let bundlePath = Bundle.main.bundleURL.path
+        let isInsideApplications = bundlePath.hasPrefix("/Applications") || (bundlePath.hasPrefix("/Users/") && bundlePath.contains("/Applications"))
+        if isInsideApplications || bundlePath.contains(".build") {
+            return
+        }
+
+        let isTurkish = LocalizationService.shared.isTurkish
+        let alert = NSAlert()
+        alert.messageText = isTurkish ? "Uygulamalar Klasörüne Taşınsın mı?" : "Move to Applications Folder?"
+        alert.informativeText = isTurkish
+            ? "JustNotch'un düzenli çalışması ve menü çubuğunda kalıcı olması için Uygulamalar klasörüne taşınması önerilir."
+            : "Moving JustNotch to your Applications folder ensures it stays accessible and works seamlessly."
+        alert.addButton(withTitle: isTurkish ? "Uygulamalar'a Taşı" : "Move to Applications")
+        alert.addButton(withTitle: isTurkish ? "Burada Bırak" : "Do Not Move")
+        alert.alertStyle = .informational
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            moveToApplicationsFolder()
+        }
+    }
+
+    private func moveToApplicationsFolder() {
+        let currentURL = Bundle.main.bundleURL
+        let targetURL = URL(fileURLWithPath: "/Applications/JustNotch.app")
+        let fileManager = FileManager.default
+
+        do {
+            if fileManager.fileExists(atPath: targetURL.path) {
+                try fileManager.removeItem(at: targetURL)
+            }
+            try fileManager.copyItem(at: currentURL, to: targetURL)
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/xattr")
+            process.arguments = ["-cr", targetURL.path]
+            try? process.run()
+            process.waitUntilExit()
+
+            let config = NSWorkspace.OpenConfiguration()
+            NSWorkspace.shared.openApplication(at: targetURL, configuration: config) { _, _ in
+                DispatchQueue.main.async {
+                    NSApplication.shared.terminate(nil)
+                }
+            }
+        } catch {
+            print("Failed to move to Applications: \(error)")
         }
     }
 
