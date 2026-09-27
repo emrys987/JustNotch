@@ -64,12 +64,21 @@ public struct MusicNotchView: View {
                     }
 
                     VStack(spacing: 8) {
-                        HStack(spacing: 24) {
+                        HStack(spacing: 16) {
+                            Button {
+                                mediaService.toggleShuffle()
+                            } label: {
+                                Image(systemName: "shuffle")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(state.isShuffling ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
+                            }
+                            .buttonStyle(.plain)
+
                             Button {
                                 mediaService.previousTrack()
                             } label: {
                                 Image(systemName: "backward.fill")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 13))
                                     .foregroundStyle(.white.opacity(0.85))
                             }
                             .buttonStyle(.plain)
@@ -78,7 +87,7 @@ public struct MusicNotchView: View {
                                 mediaService.togglePlayPause()
                             } label: {
                                 Image(systemName: state.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                    .font(.system(size: 32))
+                                    .font(.system(size: 30))
                                     .foregroundStyle(.white)
                             }
                             .buttonStyle(.plain)
@@ -87,8 +96,17 @@ public struct MusicNotchView: View {
                                 mediaService.nextTrack()
                             } label: {
                                 Image(systemName: "forward.fill")
-                                    .font(.system(size: 14))
+                                    .font(.system(size: 13))
                                     .foregroundStyle(.white.opacity(0.85))
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                mediaService.toggleRepeat()
+                            } label: {
+                                Image(systemName: "repeat")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(state.isRepeating ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
                             }
                             .buttonStyle(.plain)
                         }

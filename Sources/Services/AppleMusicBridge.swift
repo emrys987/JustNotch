@@ -28,8 +28,10 @@ public final class AppleMusicBridge: Sendable {
                 set tDuration to duration of tTrack
                 set tPosition to player position
                 set tVolume to sound volume
+                set tRepeating to (song repeat is not off) as string
+                set tShuffling to shuffle enabled as string
                 
-                return tName & "|||" & tArtist & "|||" & tAlbum & "|||" & (tDuration as string) & "|||" & (tPosition as string) & "|||" & pState & "|||" & (tVolume as string)
+                return tName & "|||" & tArtist & "|||" & tAlbum & "|||" & (tDuration as string) & "|||" & (tPosition as string) & "|||" & pState & "|||" & (tVolume as string) & "|||" & tRepeating & "|||" & tShuffling
             on error
                 return "ERROR"
             end try
@@ -54,6 +56,8 @@ public final class AppleMusicBridge: Sendable {
         let position = Double(parts[4].replacingOccurrences(of: ",", with: ".")) ?? 0.0
         let isPlaying = parts[5].lowercased() == "playing"
         let volume = (Double(parts[6].replacingOccurrences(of: ",", with: ".")) ?? 100.0) / 100.0
+        let isRepeating = parts.count > 7 ? (parts[7].lowercased() == "true") : false
+        let isShuffling = parts.count > 8 ? (parts[8].lowercased() == "true") : false
 
         let artworkData = await fetchArtworkData()
 
@@ -67,7 +71,9 @@ public final class AppleMusicBridge: Sendable {
             positionTimestamp: Date(),
             isPlaying: isPlaying,
             artworkData: artworkData,
-            volume: volume
+            volume: volume,
+            isRepeating: isRepeating,
+            isShuffling: isShuffling
         )
     }
 
@@ -115,6 +121,26 @@ public final class AppleMusicBridge: Sendable {
         """)
     }
 
+    public func toggleRepeat() async {
+        await executeVoidScript("""
+        tell application "Music"
+            if song repeat is off then
+                set song repeat to all
+            else
+                set song repeat to off
+            end if
+        end tell
+        """)
+    }
+
+    public func toggleShuffle() async {
+        await executeVoidScript("""
+        tell application "Music"
+            set shuffle enabled to not shuffle enabled
+        end tell
+        """)
+    }
+
     public func seek(to seconds: TimeInterval) async {
         await executeVoidScript("""
         tell application "Music"
@@ -133,15 +159,30 @@ public final class AppleMusicBridge: Sendable {
     }
 
     private func executeAppleScript(_ source: String) async -> String? {
-        await Task.detached(priority: .userInitiated) {
-            var errorInfo: NSDictionary?
-            let script = NSAppleScript(source: source)
-            let outputDescriptor = script?.executeAndReturnError(&errorInfo)
-            return outputDescriptor?.stringValue
-        }.value
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var error: NSDictionary?
+                if let scriptObject = NSAppleScript(source: source) {
+                    let output = scriptObject.executeAndReturnError(&error)
+                    if error == nil {
+                        continuation.resume(returning: output.stringValue)
+                        return
+                    }
+                }
+                continuation.resume(returning: nil)
+            }
+        }
     }
 
     private func executeVoidScript(_ source: String) async {
-        _ = await executeAppleScript(source)
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                if let scriptObject = NSAppleScript(source: source) {
+                    var error: NSDictionary?
+                    scriptObject.executeAndReturnError(&error)
+                }
+                continuation.resume()
+            }
+        }
     }
 }

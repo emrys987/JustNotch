@@ -51,7 +51,16 @@ public struct DualNotchDashboardView: View {
             }
 
             VStack(spacing: 6) {
-                HStack(spacing: 18) {
+                HStack(spacing: 14) {
+                    Button {
+                        mediaService.toggleShuffle()
+                    } label: {
+                        Image(systemName: "shuffle")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(mediaState.isShuffling ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
+                    }
+                    .buttonStyle(.plain)
+
                     Button {
                         mediaService.previousTrack()
                     } label: {
@@ -76,6 +85,15 @@ public struct DualNotchDashboardView: View {
                         Image(systemName: "forward.fill")
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.85))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        mediaService.toggleRepeat()
+                    } label: {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(mediaState.isRepeating ? Color(red: 0.18, green: 0.84, blue: 0.45) : .white.opacity(0.45))
                     }
                     .buttonStyle(.plain)
                 }

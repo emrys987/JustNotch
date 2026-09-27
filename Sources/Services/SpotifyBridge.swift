@@ -27,8 +27,10 @@ public final class SpotifyBridge: Sendable {
             set tPosition to player position
             set tArtwork to artwork url of current track
             set tVolume to sound volume
+            set tRepeating to repeating as string
+            set tShuffling to shuffling as string
             
-            return tName & "|||" & tArtist & "|||" & tAlbum & "|||" & (tDuration as string) & "|||" & (tPosition as string) & "|||" & pState & "|||" & tArtwork & "|||" & (tVolume as string)
+            return tName & "|||" & tArtist & "|||" & tAlbum & "|||" & (tDuration as string) & "|||" & (tPosition as string) & "|||" & pState & "|||" & tArtwork & "|||" & (tVolume as string) & "|||" & tRepeating & "|||" & tShuffling
         end tell
         """
 
@@ -51,6 +53,8 @@ public final class SpotifyBridge: Sendable {
         let isPlaying = parts[5].lowercased() == "playing"
         let artworkURLString = parts[6]
         let volume = (Double(parts[7].replacingOccurrences(of: ",", with: ".")) ?? 100.0) / 100.0
+        let isRepeating = parts.count > 8 ? (parts[8].lowercased() == "true") : false
+        let isShuffling = parts.count > 9 ? (parts[9].lowercased() == "true") : false
 
         var artworkData: Data? = nil
         if let artURL = URL(string: artworkURLString), artURL.scheme != nil {
@@ -67,7 +71,9 @@ public final class SpotifyBridge: Sendable {
             positionTimestamp: Date(),
             isPlaying: isPlaying,
             artworkData: artworkData,
-            volume: volume
+            volume: volume,
+            isRepeating: isRepeating,
+            isShuffling: isShuffling
         )
     }
 
@@ -95,6 +101,22 @@ public final class SpotifyBridge: Sendable {
         """)
     }
 
+    public func toggleRepeat() async {
+        await executeVoidScript("""
+        tell application "Spotify"
+            set repeating to not repeating
+        end tell
+        """)
+    }
+
+    public func toggleShuffle() async {
+        await executeVoidScript("""
+        tell application "Spotify"
+            set shuffling to not shuffling
+        end tell
+        """)
+    }
+
     public func seek(to seconds: TimeInterval) async {
         await executeVoidScript("""
         tell application "Spotify"
@@ -113,15 +135,30 @@ public final class SpotifyBridge: Sendable {
     }
 
     private func executeAppleScript(_ source: String) async -> String? {
-        await Task.detached(priority: .userInitiated) {
-            var errorInfo: NSDictionary?
-            let script = NSAppleScript(source: source)
-            let outputDescriptor = script?.executeAndReturnError(&errorInfo)
-            return outputDescriptor?.stringValue
-        }.value
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var error: NSDictionary?
+                if let scriptObject = NSAppleScript(source: source) {
+                    let output = scriptObject.executeAndReturnError(&error)
+                    if error == nil {
+                        continuation.resume(returning: output.stringValue)
+                        return
+                    }
+                }
+                continuation.resume(returning: nil)
+            }
+        }
     }
 
     private func executeVoidScript(_ source: String) async {
-        _ = await executeAppleScript(source)
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                if let scriptObject = NSAppleScript(source: source) {
+                    var error: NSDictionary?
+                    scriptObject.executeAndReturnError(&error)
+                }
+                continuation.resume()
+            }
+        }
     }
 }

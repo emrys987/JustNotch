@@ -144,4 +144,34 @@ public final class MediaService: ObservableObject {
             await pollMediaState()
         }
     }
+
+    public func toggleRepeat() {
+        Task {
+            switch currentState.player {
+            case .spotify:
+                await spotify.toggleRepeat()
+            case .appleMusic:
+                await appleMusic.toggleRepeat()
+            case .none:
+                break
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            await pollMediaState()
+        }
+    }
+
+    public func toggleShuffle() {
+        Task {
+            switch currentState.player {
+            case .spotify:
+                await spotify.toggleShuffle()
+            case .appleMusic:
+                await appleMusic.toggleShuffle()
+            case .none:
+                break
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            await pollMediaState()
+        }
+    }
 }

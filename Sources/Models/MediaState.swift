@@ -40,6 +40,8 @@ public struct MediaState: Equatable, Sendable {
     public var isPlaying: Bool
     public var artworkData: Data?
     public var volume: Double
+    public var isRepeating: Bool
+    public var isShuffling: Bool
 
     public init(
         player: SupportedMediaPlayer = .none,
@@ -51,7 +53,9 @@ public struct MediaState: Equatable, Sendable {
         positionTimestamp: Date = Date(),
         isPlaying: Bool = false,
         artworkData: Data? = nil,
-        volume: Double = 1.0
+        volume: Double = 1.0,
+        isRepeating: Bool = false,
+        isShuffling: Bool = false
     ) {
         self.player = player
         self.title = title
@@ -63,6 +67,8 @@ public struct MediaState: Equatable, Sendable {
         self.isPlaying = isPlaying
         self.artworkData = artworkData
         self.volume = volume
+        self.isRepeating = isRepeating
+        self.isShuffling = isShuffling
     }
 
     public static let empty = MediaState()
@@ -84,7 +90,7 @@ public struct MediaState: Equatable, Sendable {
     }
 
     public static func formatTime(_ seconds: TimeInterval) -> String {
-        guard seconds.isFinite && !seconds.isNaN && seconds >= 0 else { return "0:00" }
+        guard !seconds.isNaN && !seconds.isInfinite && seconds >= 0 else { return "0:00" }
         let totalSeconds = Int(seconds)
         let mins = totalSeconds / 60
         let secs = totalSeconds % 60
