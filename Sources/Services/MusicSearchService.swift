@@ -40,8 +40,13 @@ public final class MusicSearchService: Sendable {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
-        guard let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://itunes.apple.com/search?term=\(encoded)&entity=song&limit=10") else {
+        var comp = URLComponents(string: "https://itunes.apple.com/search")
+        comp?.queryItems = [
+            URLQueryItem(name: "term", value: trimmed),
+            URLQueryItem(name: "entity", value: "song"),
+            URLQueryItem(name: "limit", value: "10")
+        ]
+        guard let url = comp?.url else {
             return []
         }
 

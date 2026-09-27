@@ -4,6 +4,7 @@ public struct MusicSearchView: View {
     @Binding var isPresented: Bool
     @ObservedObject var mediaService = MediaService.shared
     @ObservedObject var loc = LocalizationService.shared
+    @FocusState private var isFocused: Bool
     @State private var query: String = ""
     @State private var results: [MusicSearchResult] = []
     @State private var isSearching: Bool = false
@@ -24,6 +25,7 @@ public struct MusicSearchView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 12))
                     .foregroundStyle(.white)
+                    .focused($isFocused)
                     .onSubmit {
                         performSearch(immediate: true)
                     }
@@ -65,6 +67,11 @@ public struct MusicSearchView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(0.08)))
+            .contentShape(Rectangle())
+            .onTapGesture {
+                NotchWindowController.shared.activateForInput()
+                isFocused = true
+            }
 
             if results.isEmpty {
                 VStack(spacing: 4) {
@@ -144,6 +151,21 @@ public struct MusicSearchView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            NotchWindowController.shared.activateForInput()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                isFocused = true
+            }
+        }
+        .onDisappear {
+            isFocused = false
+            NotchWindowController.shared.deactivateInput()
+        }
+        .onExitCommand {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPresented = false
+            }
+        }
     }
 
     private func debounceSearch(_ newText: String) {

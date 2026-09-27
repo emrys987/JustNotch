@@ -68,6 +68,7 @@ public struct DualNotchDashboardView: View {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 isShowingSearch = true
                             }
+                            NotchWindowController.shared.activateForInput()
                         } label: {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 10, weight: .semibold))

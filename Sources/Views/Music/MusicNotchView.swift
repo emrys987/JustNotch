@@ -78,6 +78,7 @@ public struct MusicNotchView: View {
                                         withAnimation(.easeInOut(duration: 0.2)) {
                                             isShowingSearch = true
                                         }
+                                        NotchWindowController.shared.activateForInput()
                                     } label: {
                                         Image(systemName: "magnifyingglass")
                                             .font(.system(size: 11, weight: .semibold))

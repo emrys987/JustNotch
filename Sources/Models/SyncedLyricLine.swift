@@ -85,4 +85,16 @@ public struct LyricParser {
         }
         return activeIndex
     }
+
+    public static func parsePlainLyrics(_ plain: String, duration: TimeInterval) -> [SyncedLyricLine] {
+        let rawLines = plain.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        guard !rawLines.isEmpty else { return [] }
+        let validDuration = duration > 0 ? duration : Double(rawLines.count * 4)
+        let step = validDuration / Double(rawLines.count)
+        return rawLines.enumerated().map { index, text in
+            SyncedLyricLine(time: step * Double(index), text: text)
+        }
+    }
 }

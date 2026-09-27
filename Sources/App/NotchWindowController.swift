@@ -38,11 +38,16 @@ final class NotchPanel: NSPanel {
         return frameRect
     }
 
-    override var canBecomeKey: Bool { false }
-    override var canBecomeMain: Bool { false }
+    override var canBecomeKey: Bool {
+        return NotchCoordinator.shared.isExpanded
+    }
+    override var canBecomeMain: Bool {
+        return NotchCoordinator.shared.isExpanded
+    }
 }
 
 final class NotchHostingView<Content: View>: NSHostingView<Content> {
+    override var acceptsFirstResponder: Bool { true }
     private var trackingArea: NSTrackingArea?
 
     @MainActor required init(rootView: Content) {
@@ -150,7 +155,7 @@ public final class NotchWindowController: NSObject, ObservableObject {
 
         let panel = NotchPanel(
             contentRect: NSRect(x: 0, y: 0, width: closedSize.width, height: closedSize.height),
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -222,10 +227,25 @@ public final class NotchWindowController: NSObject, ObservableObject {
         }
         let originY = screenFrame.origin.y + screenFrame.height - height
 
+        if !isExpanded {
+            panel.resignKey()
+        }
+
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.28
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.16, 1.0, 0.30, 1.0)
             panel.animator().setFrame(NSRect(x: originX, y: originY, width: width, height: height), display: true)
         }
+    }
+
+    public func activateForInput() {
+        guard let panel = window else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+    }
+
+    public func deactivateInput() {
+        guard let panel = window else { return }
+        panel.resignKey()
     }
 }

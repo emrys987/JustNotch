@@ -3,6 +3,7 @@ import SwiftUI
 public struct SyncedLyricsView: View {
     @ObservedObject var lyricsEngine = LyricsSyncEngine.shared
     @ObservedObject var mediaService = MediaService.shared
+    @ObservedObject var loc = LocalizationService.shared
 
     public init() {}
 
@@ -12,7 +13,7 @@ public struct SyncedLyricsView: View {
                 VStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(0.8)
-                    Text("Sözler senkronize ediliyor...")
+                    Text(loc.isTurkish ? "Sözler senkronize ediliyor..." : "Syncing lyrics...")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -22,13 +23,35 @@ public struct SyncedLyricsView: View {
                     Image(systemName: "music.mic")
                         .font(.system(size: 20))
                         .foregroundStyle(.tertiary)
-                    Text("Bu parça için senkronize söz bulunamadı")
+                    Text(loc.isTurkish ? "Bu parça için söz bulunamadı" : "No lyrics found for this track")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text("\(mediaService.currentState.title) - \(mediaService.currentState.artist)")
                         .font(.system(size: 11))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
+
+                    Button {
+                        lyricsEngine.retry(
+                            title: mediaService.currentState.title,
+                            artist: mediaService.currentState.artist,
+                            album: mediaService.currentState.album,
+                            duration: mediaService.currentState.duration
+                        )
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text(loc.isTurkish ? "Tekrar Dene" : "Retry")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(Color(red: 0.18, green: 0.84, blue: 0.45))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.white.opacity(0.08)))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 20)
