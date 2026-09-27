@@ -4,20 +4,26 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-echo "Building JustNotch..."
-swift build -c release
-
 APP_NAME="JustNotch"
 BUNDLE_DIR="$DIR/${APP_NAME}.app"
 CONTENTS_DIR="$BUNDLE_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
+echo "Building JustNotch for Apple Silicon (arm64)..."
+swift build -c release --triple arm64-apple-macosx14.0
+
+echo "Building JustNotch for Intel (x86_64)..."
+swift build -c release --triple x86_64-apple-macosx14.0
+
 rm -rf "$BUNDLE_DIR"
 mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
 
-cp "$DIR/.build/release/$APP_NAME" "$MACOS_DIR/$APP_NAME"
+echo "Combining into Universal Binary (arm64 + x86_64)..."
+lipo -create -output "$MACOS_DIR/$APP_NAME" \
+    "$DIR/.build/arm64-apple-macosx/release/$APP_NAME" \
+    "$DIR/.build/x86_64-apple-macosx/release/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
 
 if [ -f "$DIR/Resources/AppIcon.icns" ]; then
@@ -77,7 +83,7 @@ ln -s /Applications "$DMG_TEMP/Applications"
 hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_TEMP" -ov -format UDZO "$DIR/${APP_NAME}.dmg" > /dev/null 2>&1
 rm -rf "$DMG_TEMP"
 
-echo "Build complete!"
+echo "Build complete (Universal Binary)!"
 echo "App: $BUNDLE_DIR"
 echo "DMG: $DIR/${APP_NAME}.dmg"
 echo "ZIP: $DIR/${APP_NAME}.zip"
