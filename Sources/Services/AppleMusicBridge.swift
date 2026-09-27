@@ -59,7 +59,20 @@ public final class AppleMusicBridge: Sendable {
         let isRepeating = parts.count > 7 ? (parts[7].lowercased() == "true") : false
         let isShuffling = parts.count > 8 ? (parts[8].lowercased() == "true") : false
 
-        let artworkData = await fetchArtworkData()
+        let trackKey = "music:\(title):\(artist):\(album)"
+        var artworkData: Data? = nil
+
+        if !title.isEmpty, let cached = ArtworkCache.shared.get(for: trackKey) {
+            artworkData = cached.0
+        } else if !title.isEmpty {
+            Task.detached(priority: .utility) { [weak self] in
+                guard let self = self else { return }
+                if let rawData = await self.fetchArtworkData() {
+                    ArtworkCache.shared.set(data: rawData, for: trackKey)
+                    await MediaService.shared.updateArtworkIfCurrent(key: trackKey, data: rawData)
+                }
+            }
+        }
 
         return MediaState(
             player: .appleMusic,
@@ -71,6 +84,7 @@ public final class AppleMusicBridge: Sendable {
             positionTimestamp: Date(),
             isPlaying: isPlaying,
             artworkData: artworkData,
+            artworkKey: trackKey,
             volume: volume,
             isRepeating: isRepeating,
             isShuffling: isShuffling

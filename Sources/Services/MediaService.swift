@@ -67,7 +67,7 @@ public final class MediaService: ObservableObject {
             }
         }
 
-        let newState = detectedState ?? .empty
+        var newState = detectedState ?? .empty
 
         if newState.title != currentState.title || newState.artist != currentState.artist {
             if newState.hasActiveTrack {
@@ -82,7 +82,16 @@ public final class MediaService: ObservableObject {
             }
         }
 
+        if newState.artworkData == nil && newState.artworkKey == currentState.artworkKey && currentState.artworkData != nil {
+            newState.artworkData = currentState.artworkData
+        }
+
         self.currentState = newState
+    }
+
+    public func updateArtworkIfCurrent(key: String, data: Data) {
+        guard currentState.artworkKey == key, currentState.artworkData == nil else { return }
+        currentState.artworkData = data
     }
 
     public func togglePlayPause() {
@@ -109,7 +118,9 @@ public final class MediaService: ObservableObject {
             case .none:
                 break
             }
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            await pollMediaState()
+            try? await Task.sleep(nanoseconds: 200_000_000)
             await pollMediaState()
         }
     }
@@ -124,7 +135,9 @@ public final class MediaService: ObservableObject {
             case .none:
                 break
             }
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            await pollMediaState()
+            try? await Task.sleep(nanoseconds: 200_000_000)
             await pollMediaState()
         }
     }

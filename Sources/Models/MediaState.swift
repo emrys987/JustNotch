@@ -39,6 +39,7 @@ public struct MediaState: Equatable, Sendable {
     public var positionTimestamp: Date
     public var isPlaying: Bool
     public var artworkData: Data?
+    public var artworkKey: String
     public var volume: Double
     public var isRepeating: Bool
     public var isShuffling: Bool
@@ -53,6 +54,7 @@ public struct MediaState: Equatable, Sendable {
         positionTimestamp: Date = Date(),
         isPlaying: Bool = false,
         artworkData: Data? = nil,
+        artworkKey: String = "",
         volume: Double = 1.0,
         isRepeating: Bool = false,
         isShuffling: Bool = false
@@ -66,6 +68,7 @@ public struct MediaState: Equatable, Sendable {
         self.positionTimestamp = positionTimestamp
         self.isPlaying = isPlaying
         self.artworkData = artworkData
+        self.artworkKey = artworkKey
         self.volume = volume
         self.isRepeating = isRepeating
         self.isShuffling = isShuffling
@@ -86,7 +89,16 @@ public struct MediaState: Equatable, Sendable {
 
     public var artworkImage: NSImage? {
         guard let artworkData = artworkData else { return nil }
-        return NSImage(data: artworkData)
+        if !artworkKey.isEmpty, let img = ArtworkCache.shared.getImage(for: artworkKey) {
+            return img
+        }
+        if let img = NSImage(data: artworkData) {
+            if !artworkKey.isEmpty {
+                ArtworkCache.shared.set(data: artworkData, for: artworkKey)
+            }
+            return img
+        }
+        return nil
     }
 
     public static func formatTime(_ seconds: TimeInterval) -> String {

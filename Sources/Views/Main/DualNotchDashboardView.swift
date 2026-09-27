@@ -21,14 +21,17 @@ public struct DualNotchDashboardView: View {
                         Image(nsImage: artwork)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+                            .transition(.opacity)
                     } else {
                         Rectangle()
                             .fill(Color.white.opacity(0.08))
                         Image(systemName: mediaState.hasActiveTrack ? mediaState.player.iconName : "music.note")
                             .font(.system(size: 22))
                             .foregroundStyle(.white.opacity(0.4))
+                            .transition(.opacity)
                     }
                 }
+                .animation(.easeInOut(duration: 0.2), value: mediaState.artworkImage != nil)
                 .frame(width: 80, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(

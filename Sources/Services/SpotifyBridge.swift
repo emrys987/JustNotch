@@ -57,8 +57,15 @@ public final class SpotifyBridge: Sendable {
         let isShuffling = parts.count > 9 ? (parts[9].lowercased() == "true") : false
 
         var artworkData: Data? = nil
-        if let artURL = URL(string: artworkURLString), artURL.scheme != nil {
-            artworkData = try? Data(contentsOf: artURL)
+        if !artworkURLString.isEmpty, let cached = ArtworkCache.shared.get(for: artworkURLString) {
+            artworkData = cached.0
+        } else if let artURL = URL(string: artworkURLString), artURL.scheme != nil {
+            Task.detached(priority: .userInitiated) {
+                if let (downloadedData, _) = try? await URLSession.shared.data(from: artURL) {
+                    ArtworkCache.shared.set(data: downloadedData, for: artworkURLString)
+                    await MediaService.shared.updateArtworkIfCurrent(key: artworkURLString, data: downloadedData)
+                }
+            }
         }
 
         return MediaState(
@@ -71,6 +78,7 @@ public final class SpotifyBridge: Sendable {
             positionTimestamp: Date(),
             isPlaying: isPlaying,
             artworkData: artworkData,
+            artworkKey: artworkURLString,
             volume: volume,
             isRepeating: isRepeating,
             isShuffling: isShuffling

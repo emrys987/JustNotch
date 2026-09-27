@@ -34,14 +34,17 @@ public struct MusicNotchView: View {
                                 Image(nsImage: art)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
+                                    .transition(.opacity)
                             } else {
                                 Rectangle()
                                     .fill(Color.white.opacity(0.08))
                                 Image(systemName: state.player.iconName)
                                     .font(.system(size: 24))
                                     .foregroundStyle(.secondary)
+                                    .transition(.opacity)
                             }
                         }
+                        .animation(.easeInOut(duration: 0.2), value: state.artworkImage != nil)
                         .frame(width: 82, height: 82)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(
