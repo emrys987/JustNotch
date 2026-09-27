@@ -69,7 +69,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func checkIfShouldMoveToApplicationsFolder() {
         let bundlePath = Bundle.main.bundleURL.path
         let isInsideApplications = bundlePath.hasPrefix("/Applications") || (bundlePath.hasPrefix("/Users/") && bundlePath.contains("/Applications"))
-        if isInsideApplications || bundlePath.contains(".build") {
+        let isDevelopmentFolder = bundlePath.contains(".build") || bundlePath.contains("newnotch-main")
+        if isInsideApplications || isDevelopmentFolder {
+            return
+        }
+
+        guard bundlePath.contains("/Downloads/") || bundlePath.contains("/Temp/") || bundlePath.contains("/var/folders/") else {
             return
         }
 
