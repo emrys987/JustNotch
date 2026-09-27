@@ -319,14 +319,6 @@ public struct SettingsWindowView: View {
                             )
 
                             widgetToggleRow(
-                                title: loc.isTurkish ? "Şarkı Arama Özelliği" : "Music Search Feature",
-                                description: loc.isTurkish ? "Medya kontrollerinde şarkı arama butonunu gösterir" : "Shows song search button in media controls",
-                                icon: "magnifyingglass",
-                                iconColor: Color(red: 0.18, green: 0.84, blue: 0.45),
-                                isOn: $settings.enableMusicSearch
-                            )
-
-                            widgetToggleRow(
                                 title: loc.settingsPomodoroTitle,
                                 description: loc.settingsPomodoroDesc,
                                 icon: "timer",

@@ -187,28 +187,4 @@ public final class MediaService: ObservableObject {
             await pollMediaState()
         }
     }
-
-    public func playSearchResult(title: String, artist: String, trackViewUrl: String?) {
-        Task {
-            let query = "\(artist) \(title)"
-            switch currentState.player {
-            case .appleMusic:
-                if let url = trackViewUrl, !url.isEmpty {
-                    await appleMusic.openTrackUrl(url)
-                }
-            case .spotify:
-                await spotify.searchAndPlay(query: query)
-            case .none:
-                if spotify.isRunning {
-                    await spotify.searchAndPlay(query: query)
-                } else if appleMusic.isRunning, let url = trackViewUrl, !url.isEmpty {
-                    await appleMusic.openTrackUrl(url)
-                } else {
-                    await spotify.searchAndPlay(query: query)
-                }
-            }
-            try? await Task.sleep(nanoseconds: 600_000_000)
-            await pollMediaState()
-        }
-    }
 }

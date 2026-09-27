@@ -6,7 +6,6 @@ public struct MusicNotchView: View {
     @ObservedObject var settings = UserSettings.shared
     @ObservedObject var coordinator = NotchCoordinator.shared
     @ObservedObject var loc = LocalizationService.shared
-    @State private var isShowingSearch = false
 
     public init() {}
 
@@ -14,12 +13,7 @@ public struct MusicNotchView: View {
         let state = mediaService.currentState
 
         Group {
-            if isShowingSearch {
-                MusicSearchView(isPresented: $isShowingSearch)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .transition(.opacity)
-            } else if !state.hasActiveTrack {
+            if !state.hasActiveTrack {
                 VStack(spacing: 8) {
                     Image(systemName: "music.note.list")
                         .font(.system(size: 26))
@@ -73,20 +67,6 @@ public struct MusicNotchView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                             HStack(spacing: 11) {
-                                if settings.enableMusicSearch {
-                                    Button {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            isShowingSearch = true
-                                        }
-                                        NotchWindowController.shared.activateForInput()
-                                    } label: {
-                                        Image(systemName: "magnifyingglass")
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundStyle(Color(red: 0.18, green: 0.84, blue: 0.45))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-
                                 Button {
                                     mediaService.toggleShuffle()
                                 } label: {
@@ -152,8 +132,8 @@ public struct MusicNotchView: View {
                                 .gesture(
                                     DragGesture(minimumDistance: 0)
                                         .onEnded { value in
-                                            let newRatio = Double(value.location.x / geo.size.width)
-                                            mediaService.seek(to: newRatio)
+                                             let newRatio = Double(value.location.x / geo.size.width)
+                                             mediaService.seek(to: newRatio)
                                         }
                                 )
                             }
