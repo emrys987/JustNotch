@@ -24,7 +24,7 @@ This is a **100% free, open-source, and non-profit** project developed with the 
 - **Drop Shelf:**
   - Drag and drop files or notes directly over the notch to hold them temporarily.
   - The notch automatically expands and switches to the shelf when a file is dragged over it.
-  - Zero Data Retention (ZDR): files are kept purely locally on your machine and can be cleared with one click.
+  - Local-Only Storage: files are kept purely locally on your machine and can be cleared with one click.
 
 - **Customizable Appearance:**
   - Choose between Apple-style Frosted Glass, Solid OLED Black, Custom Colors, or your own Background Image (with zoom, pan, and blur controls).
